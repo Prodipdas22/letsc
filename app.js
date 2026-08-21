@@ -4,7 +4,7 @@ const chat = document.getElementById("chat");
 const themeBtn = document.getElementById("themeBtn");
 
 // Change this after deploying your backend
-const API_URL = "YOUR_BACKEND_URL/chat";
+const API_URL = "https://letsc-lteq.onrender.com/";
 
 
 // Send message
