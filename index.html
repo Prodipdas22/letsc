@@ -1,1 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>LETSC - Personal AI</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Header -->
+        <header class="header">
+            <div>
+                <h1>LETSC</h1>
+                <p>Let's Complete 🤖</p>
+            </div>
+
+            <button id="themeBtn" class="icon-btn">🌙</button>
+        </header>
+
+        <!-- Chat Area -->
+        <main id="chat" class="chat">
+
+            <div class="message ai">
+                <div class="avatar">🤖</div>
+
+                <div class="bubble">
+                    <strong>LETSC AI</strong>
+                    <p>
+                        Hello! I'm your personal AI coding assistant.
+                        Tell me what you want to build.
+                    </p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Suggestions -->
+        <div class="suggestions">
+
+            <button onclick="useSuggestion('Write HTML code for a website')">
+                💻 Write Code
+            </button>
+
+            <button onclick="useSuggestion('Explain this code')">
+                📖 Explain Code
+            </button>
+
+            <button onclick="useSuggestion('Find errors in my code')">
+                🐛 Fix Code
+            </button>
+
+        </div>
+
+        <!-- Input -->
+        <div class="input-area">
+
+            <textarea
+                id="messageInput"
+                placeholder="Ask LETSC anything..."
+                rows="1"
+            ></textarea>
+
+            <button id="sendBtn" class="send-btn">
+                ➤
+            </button>
+
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+
+            <button class="nav-item active">
+                <span>💬</span>
+                <small>Chat</small>
+            </button>
+
+            <button class="nav-item">
+                <span>📁</span>
+                <small>Projects</small>
+            </button>
+
+            <button class="nav-item">
+                <span>🧠</span>
+                <small>Memory</small>
+            </button>
+
+            <button class="nav-item">
+                <span>⚙️</span>
+                <small>Settings</small>
+            </button>
+
+        </nav>
+
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
