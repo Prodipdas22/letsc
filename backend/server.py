@@ -9,7 +9,6 @@ from pydantic import BaseModel
 app = FastAPI(title="LETSC AI API")
 
 
-# Allow the LETSC frontend to communicate with the backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -41,13 +40,14 @@ def chat(request: ChatRequest):
 
     if not OPENROUTER_API_KEY:
         return {
-            "error": "OPENROUTER_API_KEY is not configured."
+            "success": False,
+            "error": "OPENROUTER_API_KEY is missing on the server."
         }
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://letsc.example",
+        "HTTP-Referer": "https://letscomp.netlify.app",
         "X-Title": "LETSC Personal AI"
     }
 
@@ -58,8 +58,8 @@ def chat(request: ChatRequest):
                 "role": "system",
                 "content": (
                     "You are LETSC, a helpful personal AI coding assistant. "
-                    "Write clean, understandable and practical code. "
-                    "When appropriate, explain the code and identify errors."
+                    "Help the user write, understand and debug code. "
+                    "Give practical and clear answers."
                 )
             },
             {
@@ -75,27 +75,75 @@ def chat(request: ChatRequest):
             OPENROUTER_URL,
             headers=headers,
             json=data,
-            timeout=60
+            timeout=90
         )
 
-        response.raise_for_status()
+        # Try to read OpenRouter's response
+        try:
+            result = response.json()
+        except ValueError:
+            result = {
+                "raw_response": response.text
+            }
 
-        result = response.json()
+        # OpenRouter returned an HTTP error
+        if response.status_code >= 400:
 
-        answer = result["choices"][0]["message"]["content"]
+            return {
+                "success": False,
+                "status_code": response.status_code,
+                "error": result.get(
+                    "error",
+                    result.get(
+                        "message",
+                        result.get("raw_response", "OpenRouter request failed.")
+                    )
+                )
+            }
+
+        # Successful response
+        choices = result.get("choices", [])
+
+        if not choices:
+            return {
+                "success": False,
+                "error": "OpenRouter returned no choices.",
+                "details": result
+            }
+
+        message = choices[0].get("message", {})
+
+        answer = message.get("content")
+
+        if not answer:
+            return {
+                "success": False,
+                "error": "OpenRouter returned an empty answer.",
+                "details": result
+            }
 
         return {
+            "success": True,
             "answer": answer
+        }
+
+    except requests.exceptions.Timeout:
+
+        return {
+            "success": False,
+            "error": "OpenRouter request timed out."
         }
 
     except requests.exceptions.RequestException as error:
 
         return {
-            "error": f"AI request failed: {str(error)}"
+            "success": False,
+            "error": f"Network error: {str(error)}"
         }
 
-    except (KeyError, IndexError):
+    except Exception as error:
 
         return {
-            "error": "Unexpected response received from AI provider."
+            "success": False,
+            "error": f"Server error: {str(error)}"
         }
