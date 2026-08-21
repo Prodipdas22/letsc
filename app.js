@@ -3,31 +3,75 @@ const sendBtn = document.getElementById("sendBtn");
 const chat = document.getElementById("chat");
 const themeBtn = document.getElementById("themeBtn");
 
+// Change this after deploying your backend
+const API_URL = "YOUR_BACKEND_URL/chat";
+
+
 // Send message
-function sendMessage() {
+async function sendMessage() {
 
     const text = input.value.trim();
 
     if (!text) return;
 
-    // Add user message
     addMessage(text, "user");
 
     input.value = "";
 
-    // Temporary AI response
-    setTimeout(() => {
+    const loadingMessage = addMessage(
+        "Thinking... 🤔",
+        "ai"
+    );
+
+    try {
+
+        const response = await fetch(API_URL, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                message: text
+            })
+
+        });
+
+        const data = await response.json();
+
+        loadingMessage.remove();
+
+        if (data.answer) {
+
+            addMessage(data.answer, "ai");
+
+        } else {
+
+            addMessage(
+                "Sorry, something went wrong: " +
+                (data.error || "Unknown error"),
+                "ai"
+            );
+
+        }
+
+    } catch (error) {
+
+        loadingMessage.remove();
 
         addMessage(
-            "I received your request. AI connection will be added in the next step. 🚀",
+            "Unable to connect to the LETSC AI server.",
             "ai"
         );
 
-    }, 500);
+        console.error(error);
+    }
 }
 
 
-// Add message to chat
+// Add message
 function addMessage(text, type) {
 
     const message = document.createElement("div");
@@ -58,6 +102,8 @@ function addMessage(text, type) {
     chat.appendChild(message);
 
     chat.scrollTop = chat.scrollHeight;
+
+    return message;
 }
 
 
@@ -72,7 +118,7 @@ function escapeHTML(text) {
 }
 
 
-// Suggestion buttons
+// Suggestions
 function useSuggestion(text) {
 
     input.value = text;
@@ -104,14 +150,9 @@ themeBtn.addEventListener("click", function() {
 
     document.body.classList.toggle("dark");
 
-    if (document.body.classList.contains("dark")) {
-
-        themeBtn.textContent = "☀️";
-
-    } else {
-
-        themeBtn.textContent = "🌙";
-
-    }
+    themeBtn.textContent =
+        document.body.classList.contains("dark")
+            ? "☀️"
+            : "🌙";
 
 });
