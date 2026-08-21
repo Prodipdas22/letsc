@@ -45,17 +45,17 @@ async function sendMessage() {
 
         if (data.success && data.answer) {
 
-              addMessage(data.answer, "ai");
+    addMessage(data.answer, "ai");
 
-        } else {
+} else {
 
-              addMessage(
-              "⚠️ LETSC Error:\n" +
-              (data.error || "Unknown server error"),
-              "ai"
-              );
+    addMessage(
+        "⚠️ LETSC Error:\n" +
+        JSON.stringify(data, null, 2),
+        "ai"
+    );
 
-            console.error("LETSC API response:", data);
+    console.error("LETSC API response:", data);
         }
 
     } catch (error) {
