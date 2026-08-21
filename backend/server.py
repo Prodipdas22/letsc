@@ -35,13 +35,21 @@ def home():
     }
 
 
+@app.get("/health")
+def health():
+    return {
+        "server": "online",
+        "api_key_configured": bool(OPENROUTER_API_KEY)
+    }
+
+
 @app.post("/chat")
 def chat(request: ChatRequest):
 
     if not OPENROUTER_API_KEY:
         return {
             "success": False,
-            "error": "OPENROUTER_API_KEY is missing on the server."
+            "error": "OpenRouter API key is NOT configured in Render."
         }
 
     headers = {
@@ -51,15 +59,15 @@ def chat(request: ChatRequest):
         "X-Title": "LETSC Personal AI"
     }
 
-    data = {
+    payload = {
         "model": "openrouter/free",
         "messages": [
             {
                 "role": "system",
                 "content": (
-                    "You are LETSC, a helpful personal AI coding assistant. "
-                    "Help the user write, understand and debug code. "
-                    "Give practical and clear answers."
+                    "You are LETSC, a personal AI coding assistant. "
+                    "Help users write, explain and debug code. "
+                    "Give clear and practical answers."
                 )
             },
             {
@@ -74,51 +82,61 @@ def chat(request: ChatRequest):
         response = requests.post(
             OPENROUTER_URL,
             headers=headers,
-            json=data,
+            json=payload,
             timeout=90
         )
 
-        # Try to read OpenRouter's response
+        print("OpenRouter status:", response.status_code)
+        print("OpenRouter response:", response.text)
+
         try:
             result = response.json()
-        except ValueError:
-            result = {
-                "raw_response": response.text
+        except Exception:
+            return {
+                "success": False,
+                "error": "OpenRouter returned non-JSON response.",
+                "status_code": response.status_code,
+                "raw": response.text[:1000]
             }
 
-        # OpenRouter returned an HTTP error
         if response.status_code >= 400:
+
+            error_data = result.get("error")
+
+            if isinstance(error_data, dict):
+                error_message = error_data.get(
+                    "message",
+                    "OpenRouter returned an error."
+                )
+            else:
+                error_message = str(
+                    error_data or
+                    result.get("message") or
+                    "OpenRouter request failed."
+                )
 
             return {
                 "success": False,
-                "status_code": response.status_code,
-                "error": result.get(
-                    "error",
-                    result.get(
-                        "message",
-                        result.get("raw_response", "OpenRouter request failed.")
-                    )
-                )
+                "error": error_message,
+                "status_code": response.status_code
             }
 
-        # Successful response
-        choices = result.get("choices", [])
+        choices = result.get("choices")
 
         if not choices:
             return {
                 "success": False,
                 "error": "OpenRouter returned no choices.",
+                "status_code": response.status_code,
                 "details": result
             }
 
-        message = choices[0].get("message", {})
-
-        answer = message.get("content")
+        answer = choices[0].get("message", {}).get("content")
 
         if not answer:
             return {
                 "success": False,
-                "error": "OpenRouter returned an empty answer.",
+                "error": "AI returned an empty response.",
                 "details": result
             }
 
@@ -131,19 +149,19 @@ def chat(request: ChatRequest):
 
         return {
             "success": False,
-            "error": "OpenRouter request timed out."
+            "error": "Request to OpenRouter timed out."
         }
 
-    except requests.exceptions.RequestException as error:
+    except requests.exceptions.RequestException as e:
 
         return {
             "success": False,
-            "error": f"Network error: {str(error)}"
+            "error": f"Network error: {str(e)}"
         }
 
-    except Exception as error:
+    except Exception as e:
 
         return {
             "success": False,
-            "error": f"Server error: {str(error)}"
+            "error": f"Unexpected server error: {str(e)}"
         }
