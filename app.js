@@ -43,18 +43,19 @@ async function sendMessage() {
 
         loadingMessage.remove();
 
-        if (data.answer) {
+        if (data.success && data.answer) {
 
-            addMessage(data.answer, "ai");
+              addMessage(data.answer, "ai");
 
         } else {
 
-            addMessage(
-                "Sorry, something went wrong: " +
-                (data.error || "Unknown error"),
-                "ai"
-            );
+              addMessage(
+              "⚠️ LETSC Error:\n" +
+              (data.error || "Unknown server error"),
+              "ai"
+              );
 
+            console.error("LETSC API response:", data);
         }
 
     } catch (error) {
